@@ -6,79 +6,144 @@ This assignment makes use of data from a personal activity monitoring device. Th
 
 ## Loading and preprocessing data
 ### Load the data
-```{r}
+
+```r
 data <- read.csv("activity.csv")
 ```
 ### Process/transform the data into a format suitable for your analysis
-```{r}
+
+```r
 data$date <- as.Date(data$date)
 ```
 
 ## What is mean total number of steps taken per day?
 ### Make is histogram of the total number of steps taken each day
-```{r fig.height=4}
+
+```r
 h <- tapply(data$steps,data$date,sum,na.rm=TRUE)
 hist(h,main="Histogram of the total number of steps taken each day",xlab="Number of steps",col="grey")
 ```
+
+![plot of chunk unnamed-chunk-3](figure/unnamed-chunk-3.png) 
 ### Calculate and report the mean and median total number of steps taken per day
-```{r}
+
+```r
 mean(h)
+```
+
+```
+## [1] 9354
+```
+
+```r
 median(h)
+```
+
+```
+## [1] 10395
 ```
 
 ## What is the average daily activity pattern?
 ### Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
-```{r fig.height=4}
+
+```r
 t <- tapply(data$steps,data$interval,mean,na.rm=TRUE)
 plot(t,type="l",xlab="Time (with 5-minute intervals)",ylab="Average number of steps taken",xaxt="n")
 r <- seq(1,length(t),length=10)
 l <- sapply(sprintf("%04d",as.integer(names(t))),function(x){paste(substr(x,1,2),substr(x,3,4),sep=":")},USE.NAMES=FALSE)
 axis(1,at=r,labels=l[r],cex.axis=0.75)
 ```
+
+![plot of chunk unnamed-chunk-5](figure/unnamed-chunk-5.png) 
 ### Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r}
+
+```r
 l[which.max(t)]
+```
+
+```
+## [1] "08:35"
 ```
 
 ## Imputing missing values
 ### Calculate and report the total number of missing values in the dataset
-```{r}
+
+```r
 sum(is.na(data[1]))
+```
+
+```
+## [1] 2304
 ```
 ### Devise a strategy for filling in all of the missing values in the dataset
 I replace missing value by an average value of all days for that interval
-```{r}
+
+```r
 nsteps <- data$steps
 for(i in seq_along(nsteps))
   if(is.na(nsteps[i]))
     nsteps[i] <- as.integer(round(t[as.character(data$interval[i])],0))
 ```
 ### Create a new dataset that is equal to the original dataset but with the missing data filled in
-```{r}
+
+```r
 data2 <- transform(data,steps=nsteps)
 ```
 ### Make a histogram of the total number of steps taken each day and calculate and report the mean and median total number of steps taken per day
-```{r fig.height=4}
+
+```r
 h2 <- tapply(data2$steps,data2$date,sum)
 hist(h2,main="Histogram of the total number of steps taken each day",xlab="Number of steps",col="grey")
+```
+
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10.png) 
+
+```r
 mean(h2)
+```
+
+```
+## [1] 10766
+```
+
+```r
 median(h2)
+```
+
+```
+## [1] 10762
 ```
 Values of mean and median are different after replacing missing values. Imputing increases mean and median.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 ### Create a new factor variable in the dataset with two levels -- "weekday" and "weekend"
-```{r}
+
+```r
 Sys.setlocale("LC_TIME","English")
+```
+
+```
+## [1] "English_United States.1252"
+```
+
+```r
 data2$wd <- ifelse(weekdays(data2$date) %in% c("Saturday","Sunday"),"weekend","weekday")
 data2$wd <- as.factor(data2$wd)
 ```
 #### How many there weekdays and weekends?
-```{r}
+
+```r
 table(sapply(split(data2,data2$date),function(x) x$wd[1]))
 ```
+
+```
+## 
+## weekday weekend 
+##      45      16
+```
 ### Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday or weekend days (y-axis)
-```{r fig.height=8}
+
+```r
 par(mfrow=c(2,1))
 t2 <- tapply(data2$steps,list(data2$interval,data2$wd),mean)
 for(i in 1:2) {
@@ -86,3 +151,5 @@ for(i in 1:2) {
   axis(1,at=r,labels=l[r],cex.axis=0.75)
 }
 ```
+
+![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-13.png) 
